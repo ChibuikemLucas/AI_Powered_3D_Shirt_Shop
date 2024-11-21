@@ -1,8 +1,12 @@
 import React from 'react'
 
-const CustomButton = () => {
+const CustomButton = ({ title }) => {
   return (
-    <div>CustomButton</div>
+    <button 
+    className={`px-2`}
+    >
+      {title}
+    </button>
   )
 }
 
