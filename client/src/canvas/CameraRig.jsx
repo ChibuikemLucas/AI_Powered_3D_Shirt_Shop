@@ -10,6 +10,8 @@ const CameraRig = ({ children }) => {
   const snap = useSnapshot(state);
 
   useFrame((state, delta)=>{
+    const isBreakpoint = window.innerWidth <= 1260;
+    const isMobile = window.innerWidth <= 600;
 
   //Set model rotation smoothly
 easing.dampE(
