@@ -25,7 +25,7 @@ const Customizer = () => {
   });
 
 
-  // Show active tab depending on activeTab
+  // Show tab content depending on activeTab
   const generateTabContent = (tab) => {
     switch (activeEditorTab) {
       case "colorpicker":
