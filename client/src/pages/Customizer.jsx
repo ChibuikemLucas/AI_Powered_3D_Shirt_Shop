@@ -15,26 +15,26 @@ const Customizer = () => {
   const [file, setFile] = useState('');
   const [prompt, setPrompt] = useState('');
   const [generatingImg, setGeneratingImg] = useState(false);
-  const [activeEditorTab, setActiveEditorTab] = useState("");
+  const [activeEditorTab, setActiveEditorTab] = useState('');
   const [activeFilterTab, setActiveFilterTab] = useState({
     logoShirt: true,
     stylishShirt: false,
   });
 
-  // Show tab content depending on activeTab
+  // Generate tab content
   const generateTabContent = () => {
     switch (activeEditorTab) {
-      case "colorpicker":
+      case 'colorpicker':
         return <ColorPicker />;
-      case "filepicker":
+      case 'filepicker':
         return (
-          <FilePicker 
-            file={file} 
-            setFile={setFile} 
-            readFile={readFile} 
+          <FilePicker
+            file={file}
+            setFile={setFile}
+            readFile={(type) => readFile(type)} // Explicitly pass type
           />
         );
-      case "aipicker":
+      case 'aipicker':
         return (
           <AIPicker
             prompt={prompt}
@@ -48,48 +48,13 @@ const Customizer = () => {
     }
   };
 
-  const handleDecals = (type, result) => {
-    const decalType = DecalTypes[type];
-    state[decalType.stateProperty] = result;
-
-    if (!activeFilterTab[decalType.filterTab]) {
-      handleActiveFilterTab(decalType.filterTab);
-    }
-  };
-
-  const handleActiveFilterTab = (tabName) => {
-    switch (tabName) {
-      case "logoShirt":
-        state.isLogoTexture = !activeFilterTab[tabName];
-        break;
-      case "stylishShirt":
-        state.isFullTexture = !activeFilterTab[tabName];
-        break;
-      default:
-        state.isLogoTexture = true;
-        state.isFullTexture = false;
-        break;
-    }
-
-    // Update activeFilterTab state
-    setActiveFilterTab((prevState) => ({
-      ...prevState,
-      [tabName]: !prevState[tabName],
-    }));
-  };
-
-  const readFile = (type) => {
-    reader(file).then((result) => {
-      handleDecals(type, result);
-      setActiveEditorTab("");
-    });
-  };
-
+  // Handle AI image generation
   const handleSubmit = async (type) => {
-    if (!prompt) return alert("Please enter a prompt");
+    if (!prompt) return alert('Please enter a prompt');
 
     try {
       setGeneratingImg(true);
+
       const response = await fetch('http://localhost:8080/api/v1/dalle', {
         method: 'POST',
         headers: {
@@ -104,14 +69,62 @@ const Customizer = () => {
       alert(error);
     } finally {
       setGeneratingImg(false);
-      setActiveEditorTab("");
+      setActiveEditorTab('');
     }
+  };
+
+  // Handle decals application
+  const handleDecals = (type, result) => {
+    const decalType = DecalTypes[type];
+
+    state[decalType.stateProperty] = result;
+
+    if (!activeFilterTab[decalType.filterTab]) {
+      handleActiveFilterTab(decalType.filterTab);
+    }
+  };
+
+  // Handle filter tab state
+  const handleActiveFilterTab = (tabName) => {
+    switch (tabName) {
+      case 'logoShirt':
+        state.isLogoTexture = !activeFilterTab[tabName];
+        break;
+      case 'stylishShirt':
+        state.isFullTexture = !activeFilterTab[tabName];
+        break;
+      default:
+        state.isLogoTexture = true;
+        state.isFullTexture = false;
+        break;
+    }
+
+    setActiveFilterTab((prevState) => ({
+      ...prevState,
+      [tabName]: !prevState[tabName],
+    }));
+  };
+
+  // Handle file reading
+  const readFile = (type) => {
+    if (!file) {
+      alert('No file selected');
+      return;
+    }
+
+    reader(file)
+      .then((result) => {
+        handleDecals(type, result);
+        setActiveEditorTab('');
+      })
+      .catch((err) => console.error('Error reading file:', err));
   };
 
   return (
     <AnimatePresence>
       {!snap.intro && (
         <>
+          {/* Editor Tabs */}
           <motion.div
             key="custom"
             className="absolute top-0 left-0 z-10"
@@ -131,6 +144,7 @@ const Customizer = () => {
             </div>
           </motion.div>
 
+          {/* Go Back Button */}
           <motion.div
             className="absolute z-10 top-5 right-5"
             {...fadeAnimation}
@@ -143,9 +157,10 @@ const Customizer = () => {
             />
           </motion.div>
 
+          {/* Filter Tabs */}
           <motion.div
             className="filtertabs-container"
-            {...slideAnimation("up")}
+            {...slideAnimation('up')}
           >
             {FilterTabs.map((tab) => (
               <Tab
